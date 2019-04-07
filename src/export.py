@@ -1,12 +1,15 @@
-import numpy as np
-import configparser
-import datetime
-from datetime import timedelta  
+"""
+premier heuristique (intégré dans GUI)
+"""
 
-mDistances = np.loadtxt('D:/Cours/M2 Miage/Energie/lyon0/distances.txt')
-mTimes = np.loadtxt('D:/Cours/M2 Miage/Energie/lyon0/times.txt')
-demandesFile = open("D:/Cours/M2 Miage/Energie/lyon0/demandes.txt", "r")
-coordsFile = open("D:/Cours/M2 Miage/Energie/lyon0/coords.txt", "r")
+import numpy as np
+
+
+mDistances = np.loadtxt('C:/Users/gs63vr/PycharmProjects/energy/data/lyon1/distances.txt')
+mTimes = np.loadtxt('C:/Users/gs63vr/PycharmProjects/energy/data/lyon1/times.txt')
+demandesFile = open("C:/Users/gs63vr/PycharmProjects/energy/data/lyon1/demandes.txt", "r")
+coordsFile = open("C:/Users/gs63vr/PycharmProjects/energy/data/lyon1/coords.txt", "r")
+
 
 max_dist = 250
 capacity = 100
@@ -43,6 +46,13 @@ with coordsFile as cf:
 newVehicle = True
 lastDemande = 0
 trajets = []
+
+"""
+print('result: ')
+print(mDistances)
+print('[fin result]')
+raise SystemError
+"""
 while lastDemande < len(demandes):
 
     if newVehicle:
@@ -51,7 +61,7 @@ while lastDemande < len(demandes):
         totalTime = startTime
         trajet = []
         trajet.append(coords[0])
-    if ((totalDist + int(mDistances[lastDemande][lastDemande+1]) + int(mDistances[0][lastDemande+1])) <= max_dist) and ((totalCapacity + int(demandes[lastDemande])) <= capacity) and ((totalTime + mTimes[lastDemande][lastDemande+1]) <= endTime) :
+    if ((totalDist + int(mDistances[lastDemande][lastDemande+1]) + int(mDistances[0][lastDemande+1])) <= max_dist) and ((totalCapacity + int(demandes[lastDemande])) <= capacity) and ((totalTime + mTimes[lastDemande][lastDemande+1]) <= endTime):
         trajet.append(coords[lastDemande + 1])
         totalDist += int(mDistances[lastDemande][lastDemande+1])
         totalCapacity += int(demandes[lastDemande])
@@ -66,4 +76,4 @@ trajets.append(trajet)
     
 for t in trajets:
     print(t) 
-    print('\n')         
+    print('\n')
