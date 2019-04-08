@@ -5,10 +5,10 @@ premier heuristique (intégré dans GUI)
 import numpy as np
 
 
-mDistances = np.loadtxt('C:/Users/gs63vr/PycharmProjects/energy/data/lyon1/distances.txt')
-mTimes = np.loadtxt('C:/Users/gs63vr/PycharmProjects/energy/data/lyon1/times.txt')
-demandesFile = open("C:/Users/gs63vr/PycharmProjects/energy/data/lyon1/demandes.txt", "r")
-coordsFile = open("C:/Users/gs63vr/PycharmProjects/energy/data/lyon1/coords.txt", "r")
+mDistances = np.loadtxt('D:/Cours/M2 Miage/Energie/lyon0/distances.txt')
+mTimes = np.loadtxt('D:/Cours/M2 Miage/Energie/lyon0/times.txt')
+demandesFile = open("D:/Cours/M2 Miage/Energie/lyon0/demandes.txt", "r")
+coordsFile = open("D:/Cours/M2 Miage/Energie/lyon0/coords.txt", "r")
 
 
 max_dist = 250
@@ -18,6 +18,8 @@ charge_midium = 180
 charge_slow = 480
 start_time = "7:00"
 end_time = "19:00"
+
+deliveryTime = 310
 
 #Ici récup par rapport au ini pour déclarer
 startTime = 7*3600
@@ -46,6 +48,9 @@ with coordsFile as cf:
 newVehicle = True
 lastDemande = 0
 trajets = []
+allTrucksDist = 0
+allTrucksTime = 0
+numV = 0
 
 """
 print('result: ')
@@ -56,24 +61,55 @@ raise SystemError
 while lastDemande < len(demandes):
 
     if newVehicle:
+        numV += 1
         totalDist = 0
         totalCapacity = 0
         totalTime = startTime
-        trajet = []
-        trajet.append(coords[0])
-    if ((totalDist + int(mDistances[lastDemande][lastDemande+1]) + int(mDistances[0][lastDemande+1])) <= max_dist) and ((totalCapacity + int(demandes[lastDemande])) <= capacity) and ((totalTime + mTimes[lastDemande][lastDemande+1]) <= endTime):
-        trajet.append(coords[lastDemande + 1])
-        totalDist += int(mDistances[lastDemande][lastDemande+1])
-        totalCapacity += int(demandes[lastDemande])
-        totalTime += mTimes[lastDemande][lastDemande+1] 
+        coordonees = []
+        trajet = {}
+        trajet["vehicule"] = numV
+        coordonees.append(coords[0])
+
+    if (
+        ((totalDist + float(mDistances[lastDemande][lastDemande+1]) + float(mDistances[0][lastDemande+1])) <= max_dist)
+        and ((totalCapacity + float(demandes[lastDemande])) <= capacity)
+        and ((totalTime + mTimes[lastDemande][lastDemande+1] + deliveryTime) <= endTime)
+    ):
+        coordonees.append(coords[lastDemande + 1])
+        totalDist += float(mDistances[lastDemande][lastDemande+1])
+        totalCapacity += float(demandes[lastDemande])
+        totalTime += mTimes[lastDemande][lastDemande+1] + deliveryTime
+        allTrucksTime += mTimes[lastDemande][lastDemande+1] + deliveryTime
         newVehicle = False
         lastDemande += 1
-    else:
-        newVehicle = True
-        trajets.append(trajet)
 
+    else:
+        totalDist += float(mDistances[lastDemande][0])
+        totalTime += mTimes[lastDemande][0]
+        allTrucksTime += mTimes[lastDemande][0]
+        allTrucksDist += totalDist
+
+        if(totalTime + (mTimes[0][lastDemande+1])*2 + 3600) <= endTime:
+            coordonees.append(coords[0])
+            totalDist = 0
+            totalCapacity = 0
+            totalTime += 3600
+            allTrucksTime += 3600
+
+        else:
+            coordonees.append(coords[0])
+            trajet["coordonees"] = coordonees
+            trajets.append(trajet)
+            newVehicle = True
+
+coordonees.append(coords[0])
+trajet["coordonees"] = coordonees
 trajets.append(trajet)
-    
-for t in trajets:
-    print(t) 
-    print('\n')
+allTrucksDist += totalDist
+
+print(allTrucksDist)
+print(allTrucksTime)
+print(len(trajets))
+score = allTrucksDist + (allTrucksTime/600) + (len(trajets)-1)*500
+print(trajets)
+print(score)
