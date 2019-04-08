@@ -5,10 +5,10 @@ premier heuristique (intégré dans GUI)
 import numpy as np
 
 
-mDistances = np.loadtxt('D:/Cours/M2 Miage/Energie/lyon0/distances.txt')
-mTimes = np.loadtxt('D:/Cours/M2 Miage/Energie/lyon0/times.txt')
-demandesFile = open("D:/Cours/M2 Miage/Energie/lyon0/demandes.txt", "r")
-coordsFile = open("D:/Cours/M2 Miage/Energie/lyon0/coords.txt", "r")
+mDistances = np.loadtxt('/Users/guelmortis/Documents/MIAGE/vehicule_livraison/data/lyon1/distances.txt')
+mTimes = np.loadtxt('/Users/guelmortis/Documents/MIAGE/vehicule_livraison/data/lyon1/times.txt')
+demandesFile = open("/Users/guelmortis/Documents/MIAGE/vehicule_livraison/data/lyon1/demandes.txt", "r")
+coordsFile = open("/Users/guelmortis/Documents/MIAGE/vehicule_livraison/data/lyon1/coords.txt", "r")
 
 
 max_dist = 250
@@ -46,11 +46,17 @@ with coordsFile as cf:
        cnt += 1       
 
 newVehicle = True
-lastDemande = 0
+indicesDemande = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+lastDemande = -1
+indicesClients = []
 trajets = []
+solutions = []
+j = 0
 allTrucksDist = 0
 allTrucksTime = 0
 numV = 0
+i = 1
+nbRetoursBase = 0
 
 """
 print('result: ')
@@ -66,44 +72,58 @@ while lastDemande < len(demandes):
         totalCapacity = 0
         totalTime = startTime
         coordonees = []
+        solution = {}
         trajet = {}
+        solution["vehicule"] = numV
         trajet["vehicule"] = numV
-        coordonees.append(coords[0])
+        coordonees.append(coords[len(demandes)])
 
     if (
-        ((totalDist + float(mDistances[lastDemande][lastDemande+1]) + float(mDistances[0][lastDemande+1])) <= max_dist)
-        and ((totalCapacity + float(demandes[lastDemande])) <= capacity)
-        and ((totalTime + mTimes[lastDemande][lastDemande+1] + deliveryTime) <= endTime)
+        ((totalDist + float(mDistances[lastDemande][j]) + float(mDistances[len(demandes)][j])) <= max_dist)
+            and ((totalCapacity + float(demandes[lastDemande])) <= capacity)
+            and ((totalTime + mTimes[lastDemande][j] + deliveryTime) <= endTime)
     ):
-        coordonees.append(coords[lastDemande + 1])
-        totalDist += float(mDistances[lastDemande][lastDemande+1])
+        coordonees.append(coords[j])
+        indicesClients.append(lastDemande)
+        totalDist += float(mDistances[lastDemande][j])
         totalCapacity += float(demandes[lastDemande])
-        totalTime += mTimes[lastDemande][lastDemande+1] + deliveryTime
-        allTrucksTime += mTimes[lastDemande][lastDemande+1] + deliveryTime
+        totalTime += mTimes[lastDemande][j] + deliveryTime
+        allTrucksTime += mTimes[lastDemande][j] + deliveryTime
         newVehicle = False
-        lastDemande += 1
+        lastDemande = j
+        j += 1
 
     else:
-        totalDist += float(mDistances[lastDemande][0])
-        totalTime += mTimes[lastDemande][0]
-        allTrucksTime += mTimes[lastDemande][0]
+        totalDist += float(mDistances[lastDemande][len(demandes)])
+        totalTime += mTimes[lastDemande][len(demandes)]
+        allTrucksTime += mTimes[lastDemande][len(demandes)]
         allTrucksDist += totalDist
 
-        if(totalTime + (mTimes[0][lastDemande+1])*2 + 3600) <= endTime:
-            coordonees.append(coords[0])
+        if(totalTime + (mTimes[len(demandes)][j]) * 2 + 3600) <= endTime:
+            coordonees.append(coords[len(demandes)])
             totalDist = 0
             totalCapacity = 0
             totalTime += 3600
             allTrucksTime += 3600
+            nbRetoursBase += 1
+            indicesClients.append(-1)
 
         else:
-            coordonees.append(coords[0])
+            coordonees.append(coords[len(demandes)])
             trajet["coordonees"] = coordonees
             trajets.append(trajet)
+            solutions.append(solution)
+            indicesClients.append(-1)
+            solution["indicesClients"] = indicesClients
+            indicesClients = [-1]
             newVehicle = True
 
-coordonees.append(coords[0])
+
+coordonees.append(coords[len(demandes)])
+indicesClients.append(-1)
 trajet["coordonees"] = coordonees
+solution["indicesClients"] = indicesClients
+solutions.append(solution)
 trajets.append(trajet)
 allTrucksDist += totalDist
 
@@ -111,5 +131,10 @@ print(allTrucksDist)
 print(allTrucksTime)
 print(len(trajets))
 score = allTrucksDist + (allTrucksTime/600) + (len(trajets)-1)*500
-print(trajets)
+for i in trajets:
+    print(i)
+
+for i in solutions:
+    print(i)
+print('score:')
 print(score)
