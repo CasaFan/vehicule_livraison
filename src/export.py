@@ -3,6 +3,7 @@ premier heuristique (intégré dans GUI)
 """
 
 import numpy as np
+# import random
 
 mDistances = np.loadtxt('../data/lyon1/distances.txt')
 mTimes = np.loadtxt('../data/lyon1/times.txt')
@@ -57,6 +58,7 @@ def get_index_list(list):
     for l in list:
         result.append(i)
         i = i + 1
+#    random.shuffle(result)
     result.append(len(list))
     result.append(-1)
     return result
@@ -84,6 +86,7 @@ def deuxieme_voisinage(range, list):
     return list
 
 
+# TODO A modifier pour recueprer un pourcentage des donnees
 # Remplacer 5 elements consecutifs par par 5 valeurs opposees
 def troisieme_voisinage(range, list):
     if range != -1:
@@ -270,34 +273,22 @@ for func_index in range(1, 4):
             for s in solutions:
                 best_route.append(s['indicesClients'])
 
-        # for i in solutions:
-        #     print(i)
-        # print('score:')
-        # print(score)
 
-    print('The best score is:', best_score)
-    print('solution', best_route)
+    def export_file(file_name):
+        with open(file_name, 'wb') as f:
+            for b in best_route:
+                array = np.asarray(b)
+                array1 = np.where(array == -1, 'R', array)
+                array2 = np.delete(array1, -1)
+                array3 = np.delete(array2, 0)
+                mat = np.asmatrix(array3)
+                np.savetxt(f, mat, fmt='%s', delimiter=', ')
+
 
     # On export la meilleur solution dans un fichier txt
     if func_index == 1:
-        with open('sol_voisinage1.txt', 'wb') as f:
-            for b in best_route:
-                array = np.asarray(b)
-                array1 = np.where(array == -1, 'C', array)
-                mat = np.asmatrix(array1)
-                np.savetxt(f, mat, fmt='%s')
+        export_file('sol_voisinage1.txt')
     if func_index == 2:
-        with open('sol_voisinage2.txt', 'wb') as f:
-            for b in best_route:
-                array = np.asarray(b)
-                array1 = np.where(array == -1, 'C', array)
-                mat = np.asmatrix(array1)
-                np.savetxt(f, mat, fmt='%s')
+        export_file('sol_voisinage2.txt')
     if func_index == 3:
-        with open('sol_voisinage3.txt', 'wb') as f:
-            for b in best_route:
-                array = np.asarray(b)
-                array1 = np.where(array == -1, 'C', array)
-                mat = np.asmatrix(array1)
-                np.savetxt(f, mat, fmt='%s')
-
+        export_file('sol_voisinage3.txt')
