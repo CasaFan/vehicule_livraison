@@ -112,6 +112,7 @@ def deuxieme_voisinage(range, list):
 # TODO A modifier pour recueprer un pourcentage des donnees
 # Remplacer 30% elements consecutifs par par 5 valeurs opposees
 def troisieme_voisinage(range, list):
+    print(list)
     if range != -1:
         if range < (len(list)-7)/2:
             a, b = list[range], list[len(list)-3 - range]
@@ -198,19 +199,18 @@ for func_index in range(1, 5):
                 coordonees.append(coords[len(demandes)])
 
             if respects_time_capacity_distance_constraints():
-                if j in sol:
-                    lastDemande = j
-                    j = test[k]
-                    k += 1
-                else:
-                    coordonees.append(coords[j])
-                    indicesClients.append(lastDemande)
-                    # Add the constraints for the new delivery
-                    totalDist += float(mDistances[lastDemande][j])
-                    totalCapacity += float(demandes[lastDemande])
-                    totalTime += mTimes[lastDemande][j] + deliveryTime
-                    allTrucksTime += mTimes[lastDemande][j] + deliveryTime
-                    newVehicle = False
+                coordonees.append(coords[j])
+                indicesClients.append(lastDemande)
+                # Add the constraints for the new delivery
+                totalDist += float(mDistances[lastDemande][j])
+                totalCapacity += float(demandes[lastDemande])
+                totalTime += mTimes[lastDemande][j] + deliveryTime
+                allTrucksTime += mTimes[lastDemande][j] + deliveryTime
+                newVehicle = False
+                lastDemande = j
+                j = test[k]
+                k += 1
+                if lastDemande in sol:
                     lastDemande = j
                     j = test[k]
                     k += 1
@@ -225,6 +225,7 @@ for func_index in range(1, 5):
                     totalCapacity += float(demandes[lastDemande])
                     totalTime += mTimes[lastDemande][rez] + deliveryTime
                     allTrucksTime += mTimes[lastDemande][rez] + deliveryTime
+                    rez = False
                 else:
                     totalDist += float(mDistances[lastDemande][len(demandes)])
                     totalTime += mTimes[lastDemande][len(demandes)]
@@ -261,6 +262,7 @@ for func_index in range(1, 5):
                 solution["indicesClients"] = indicesClients
                 indicesClients = [-1]
                 break
+
         score = allTrucksDist + (allTrucksTime/600) + (len(trajets)-1)*500
 
         # On verifie si le score de cette solution est meilleur que la meilleure solution trouvee
@@ -270,7 +272,6 @@ for func_index in range(1, 5):
             for s in solutions:
                 best_route.append(s['indicesClients'])
         if best_score > score:
-            print(solutions)
             best_score = score
             best_route = []
             for s in solutions:
@@ -300,6 +301,7 @@ for func_index in range(1, 5):
         s1 = flat_list
     if func_index == 3:
         s2 = flat_list
+
 
     def export_file(file_name):
         with open(file_name, 'wb') as f:
