@@ -64,7 +64,12 @@ global allTrucksDist
 global numV
 global i
 global rez
-
+global client_list_by_index
+global s
+global s1
+global s2
+global sol
+global k
 
 # Cette methode va nous permettre de recuperer l'index des elements dans l'ordre original
 # Ce qui va nous permettre de travailler sur le meme jeu de donnees sans avoir a le modifier
@@ -124,6 +129,7 @@ def troisieme_voisinage(range, list):
             list[b], list[a] = list[a], list[b]
             a, b = list[range+4], list[len(list) - 7 - range]
             list[b], list[a] = list[a], list[b]
+    print(list)
     return list
 
 
@@ -151,30 +157,83 @@ def after_vehicule_recharge_still_time_left():
     return ((totalTime + (mTimes[len(demandes)][j]) * 2 + 3600) <= endTime)
 
 
+def initialize_heuristic_by_voisinage_order(i, s):
+    if func_index == 1:
+        return get_index_list(demandes)
+    if func_index == 2:
+        return premier_voisinage(i, get_index_list_for_solution(s))
+    if func_index == 3:
+        return deuxieme_voisinage(i, get_index_list_for_solution(s))
+    if func_index == 4:
+        return troisieme_voisinage(i, get_index_list_for_solution(s))
+
+
+def export_file(file_name):
+    with open(file_name, 'wb') as f:
+        for b in best_route:
+            array = np.asarray(b)
+            array1 = np.where(array == -1, 'R', array)
+            array2 = np.delete(array1, -1)
+            array3 = np.delete(array2, 0)
+            mat = np.asmatrix(array3)
+            np.savetxt(f, mat, fmt='%s', delimiter=', ')
+
+
+def get_last_solution_as_list(route):
+    flat_list = []
+    for sublist in route:
+        for item in sublist:
+            flat_list.append(item)
+    i = 0
+    while i < len(flat_list):
+        if flat_list[i] == -1:
+            flat_list.remove(flat_list[i])
+            # as an element is removed
+            # so decrease the length by 1
+            length = len(flat_list) - 1
+            # run loop again to check element
+            # at same index, when item removed
+            # next item will shift to the left
+            continue
+        i = i + 1
+    return flat_list
+
+
+def export_solution_depending_on_algo_case(index):
+    if index == 1:
+        export_file('sol.txt')
+    # On export la meilleur solution dans un fichier txt
+    if index == 2:
+        export_file('sol_voisinage1.txt')
+    if index == 3:
+        export_file('sol_voisinage2.txt')
+    if index == 4:
+        export_file('sol_voisinage3.txt')
+
 test = []
-s0 = []
-s1 = []
-s2 = []
+list_solution = []
 
+
+# We chose to create an heuristic that puts chooses the client in the normal order, however when the next order
+# is too much to take, we check the remaining order to find one that can be added instead.
+# If we can we put it else we send it in the next trip
 for func_index in range(1, 5):
-    for i in range(-1, len(demandes)):
-        if func_index == 1:
-            test = get_index_list(demandes)
-        if func_index == 2:
-            test = premier_voisinage(i, get_index_list_for_solution(s0))
-        if func_index == 3:
-            test = deuxieme_voisinage(i, get_index_list_for_solution(s1))
-        if func_index == 4:
-            test = troisieme_voisinage(i, get_index_list_for_solution(s2))
-        j = test[0]
-        k = 1
+    for client_index in range(-1, len(demandes)):
+        client_list_by_index = initialize_heuristic_by_voisinage_order(client_index, list_solution)
 
+        # initialise variables for a new run of the algorithm. As such we need to initialise the different list
+        # of elements of the heuristic such as the client list in the solution but also a list of their coordinates.
+        # We use a dictionary for the solution with one attribute being the vehicle number and the other the trip
+        # it will have to make that day
+        j = client_list_by_index[0]
+        k = 1
         newVehicle = True
         lastDemande = -1
         indicesClients = []
         trajets = []
         solutions = []
         sol = []
+        # We also initialise the variables needed to compute the score
         allTrucksDist = 0
         allTrucksTime = 0
         numV = 0
@@ -184,7 +243,7 @@ for func_index in range(1, 5):
         removed = False
 
         while True:
-            # Initialise new vehicule with new time and solutions and capacity
+            # Initialise new vehicle with new time and solutions and capacity
             if newVehicle:
                 numV += 1
                 totalDist = 0
@@ -198,9 +257,10 @@ for func_index in range(1, 5):
                 coordonees.append(coords[len(demandes)])
 
             if respects_time_capacity_distance_constraints():
+                # Check if last demand was already
                 if j in sol:
                     lastDemande = j
-                    j = test[k]
+                    j = client_list_by_index[k]
                     k += 1
                 else:
                     coordonees.append(coords[j])
@@ -212,7 +272,7 @@ for func_index in range(1, 5):
                     allTrucksTime += mTimes[lastDemande][j] + deliveryTime
                     newVehicle = False
                     lastDemande = j
-                    j = test[k]
+                    j = client_list_by_index[k]
                     k += 1
 
             else:
@@ -246,9 +306,9 @@ for func_index in range(1, 5):
                     coordonees.append(coords[len(demandes)])
                     trajet["coordonees"] = coordonees
                     trajets.append(trajet)
-                    solutions.append(solution)
                     indicesClients.append(-1)
                     solution["indicesClients"] = indicesClients
+                    solutions.append(solution)
                     indicesClients = [-1]
                     newVehicle = True
 
@@ -256,67 +316,30 @@ for func_index in range(1, 5):
                 allTrucksDist += totalDist
                 trajet["coordonees"] = coordonees
                 trajets.append(trajet)
-                solutions.append(solution)
                 indicesClients.append(-1)
                 solution["indicesClients"] = indicesClients
+                solutions.append(solution)
                 indicesClients = [-1]
                 break
+
         score = allTrucksDist + (allTrucksTime/600) + (len(trajets)-1)*500
 
         # On verifie si le score de cette solution est meilleur que la meilleure solution trouvee
         # On remplace l'acienne par celle-ci si elle est meilleure
+        # print(list_solution)
         if best_score == 0:
             best_score = score
             for s in solutions:
                 best_route.append(s['indicesClients'])
         if best_score > score:
             print(solutions)
+            print('score', score)
             best_score = score
             best_route = []
             for s in solutions:
                 best_route.append(s['indicesClients'])
 
-    flat_list = []
-    for sublist in best_route:
-        for item in sublist:
-            flat_list.append(item)
+    flat_list = get_last_solution_as_list(best_route)
+    list_solution = flat_list
 
-    while (i < len(flat_list)):
-        if (flat_list[i] == -1):
-            flat_list.remove(flat_list[i])
-            # as an element is removed
-            # so decrease the length by 1
-            length = len(flat_list) - 1
-            # run loop again to check element
-            # at same index, when item removed
-            # next item will shift to the left
-            continue
-        i = i + 1
-    flat_list.remove(-1)
-
-    if func_index == 1:
-        s0 = flat_list
-    if func_index == 2:
-        s1 = flat_list
-    if func_index == 3:
-        s2 = flat_list
-
-    def export_file(file_name):
-        with open(file_name, 'wb') as f:
-            for b in best_route:
-                array = np.asarray(b)
-                array1 = np.where(array == -1, 'R', array)
-                array2 = np.delete(array1, -1)
-                array3 = np.delete(array2, 0)
-                mat = np.asmatrix(array3)
-                np.savetxt(f, mat, fmt='%s', delimiter=', ')
-
-    if func_index == 1:
-        export_file('sol.txt')
-    # On export la meilleur solution dans un fichier txt
-    if func_index == 2:
-        export_file('sol_voisinage1.txt')
-    if func_index == 3:
-        export_file('sol_voisinage2.txt')
-    if func_index == 4:
-        export_file('sol_voisinage3.txt')
+    export_solution_depending_on_algo_case(func_index)
