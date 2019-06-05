@@ -1,7 +1,7 @@
 from exceptions.Error import Error
 
 
-class InvalidInitFileError(Error):
+class InvalidVariableError(Error):
     """Exception raised for errors in the input of wrong init file.
 
     Attributes:

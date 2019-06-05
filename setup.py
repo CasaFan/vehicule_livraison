@@ -1,5 +1,6 @@
 from tkinter import Tk
 from src.GUI import GUI
+from cefpython3 import cefpython as cef
 
 
 root = Tk()
@@ -16,5 +17,6 @@ root.update()
 
 myGUI = GUI(root)
 # myGUI.open_file()
-
+cef.Initialize()
 root.mainloop()
+cef.Shutdown()

@@ -1,5 +1,9 @@
 from tkinter import *
 from util.FileHandler import FileHandler
+from src.modele.BrowserFrame import BrowserFrame
+from src.modele.Heuristic import Heuristic
+from exceptions.InvalidVariableError import InvalidVariableError
+import folium
 
 
 class GUI:
@@ -13,22 +17,19 @@ class GUI:
         self.create_menus()
 
         # main frame
-        self.frame = Frame(self.master, relief=SUNKEN, bg="red", width=self.master.winfo_width())
+        self.frame = Frame(self.master, relief=SUNKEN, width=self.master.winfo_width())
         self.frame.grid_rowconfigure(0, weight=1)
         self.frame.grid_columnconfigure(0, weight=1)
+
+        self.browser_frame = Frame(self.frame, height=self.master.winfo_height()-250, width=self.master.winfo_width()-100)
+        #BrowserFrame(self.frame, self.master.winfo_height()-250, self.master.winfo_width()-100)
+        self.browser_frame.grid(row=1, column=0, sticky=NSEW)
         self.frame.pack(fill=None, expand=False)
-
-        # canvas to put image
-        self.canvas = Canvas(self.frame, bg="light gray", bd=0,
-                             height=(self.master.winfo_height()-250),
-                             width=(self.master.winfo_width()-100))
-        self.canvas.grid(row=1, column=0, sticky=NSEW)
-        self.canvas.config(state=DISABLED)
-
+        
         # Frame to put text
         self.textFrame = Frame(self.frame, relief=SUNKEN, bg=self.master.cget('bg'),
                                width=(self.master.winfo_width()),
-                               height=(self.master.winfo_height()-int(self.canvas['height'])-50))
+                               height=(self.master.winfo_height()-int(self.browser_frame['height'])-50))
         self.textFrame.grid_rowconfigure(0, weight=1)
         self.textFrame.grid_columnconfigure(0, weight=1)
         self.textFrame.grid(row=3, column=0, columnspan=2, sticky=NSEW)
@@ -40,6 +41,7 @@ class GUI:
 
         self.config = None
         self.data = None
+        self.mode_heuristique = 1
 
     def create_menus(self):
         """
@@ -47,28 +49,52 @@ class GUI:
         """
         # menu File
         file_menu = Menu(self.menu_bar, tearoff=0)
-        file_menu.add_command(label="Load config", command=self.load_config_file)
+        file_menu.add_command(label="Load config file", command=self.load_config_file)
         file_menu.add_command(label="Load data directory", command=self.load_data_directory)
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.master.quit)
         self.menu_bar.add_cascade(label="File", menu=file_menu)
+
+        heuristique_menu = Menu(self.menu_bar, tearoff=0)
+        self.menu_bar.add_cascade(label="Heuristique Mode", menu=heuristique_menu)
+        heuristique_menu.add_command(label="Deterministe exhaustive", command=self.set_mode_heuristique(1))
+        heuristique_menu.add_command(label="Non deterministe exhaustive", command=self.set_mode_heuristique(2))
+        heuristique_menu.add_command(label="Deterministe non exhaustive", command=self.set_mode_heuristique(3))
+        heuristique_menu.add_command(label="Non deterministe non exhaustive", command=self.set_mode_heuristique(4))
         self.master.config(menu=self.menu_bar)
 
     def load_config_file(self):
         """
         ask user to input the init file and initialise the config
-        :return: None
+        :return:
         """
         self.config = FileHandler(self.master).open_init_file()
 
     def load_data_directory(self):
         """
         ask user to input the data directory and proceed the calculate
-        :return: None
+        :return:
         """
-        data = FileHandler(self.master).open_data_directory()
-        heuristique = self.calculate_heuristique(data)
-        # print(heuristique)
+        coordinate_dict = dict()
+        self.data = FileHandler(self.master).open_data_directory()
+        try:
+            heuristique = self.calculate_heuristique(self.data)
+        except InvalidVariableError as err:
+            print(err.message)
+
+        for trajets in heuristique:
+            self.textContent.insert(END, 'Véhicule '+str(trajets['vehicule']))
+            coordinate_list = list()
+            for indice, coordinate in enumerate(trajets['coordonees']):
+                coordinate_list.append(list(map(float, coordinate.tolist())))
+                #self.textContent.insert(END, '('+', '.join(str(e) for e in coordinate.tolist()) + '), ')
+            coordinate_dict[trajets['vehicule']] = coordinate_list
+            self.textContent.insert(END, '\n')
+
+        self.load_map_lyon_with_markers(coordinate_dict)
+        self.browser_frame = BrowserFrame(self.frame, self.master.winfo_height()-250, self.master.winfo_width()-100)
+        self.browser_frame.grid(row=1, column=0, sticky=NSEW)
+        """
         for trajets in heuristique:
             self.textContent.insert(END, '{\n')
             for trajet in trajets:
@@ -77,43 +103,40 @@ class GUI:
                     self.textContent.insert(END, cord+' ')
                 self.textContent.insert(END, '], ')
             self.textContent.insert(END, '\n}\n')
+        """
 
     def calculate_heuristique(self, data_set):
         """
         Calculer les trajets du vhéhicule electrique
         :param data_set: a dictionary of all data
-        :return: a list of trajet
+        :return: a list of trajets
         """
-        newVehicle = True
-        lastDemande = 0
-        trajets = []
-        totalDist = 0
-        totalCapacity = 0
-        totalTime = self.config.start_time
-        while lastDemande < len(data_set['demands']):
-            next_total_dist = totalDist + \
-                              data_set['distances'][lastDemande][lastDemande+1] + \
-                              data_set['distances'][0][lastDemande+1]
-            next_total_capacity = totalCapacity + data_set['demands'][lastDemande]
-            next_total_time = totalTime + data_set['times'][lastDemande][lastDemande+1]
-            if newVehicle:
-                totalDist = 0
-                totalCapacity = 0
-                totalTime = self.config.start_time
-                trajet = []
-                trajet.append(data_set['coordinates'][0].tolist())
-            if next_total_dist <= self.config.max_dist and \
-                    next_total_capacity <= self.config.capacity and \
-                    next_total_time <= self.config.end_time:
-                trajet.append(data_set['coordinates'][lastDemande+1].tolist())
-                # print(trajet)
-                totalDist += data_set['distances'][lastDemande][lastDemande+1]
-                totalCapacity += data_set['demands'][lastDemande]
-                totalTime += data_set['times'][lastDemande][lastDemande+1]
-                newVehicle = False
-                lastDemande += 1
-            else:
-                newVehicle = True
-                trajets.append(trajet)
-        trajets.append(trajet)
-        return trajets
+        if self.config:
+            heuristique = Heuristic(data_set, self.config)
+            result = heuristique.execute_heuristic(self.mode_heuristique)
+            return result
+        else:
+            raise InvalidVariableError("Le fichier ne contient pas Véhicule.")
+
+    def load_map_lyon_with_markers(self, dict_coords):
+        """
+        Generate html map file in /tmp
+        :param list_coords: a list of marker coordinates to add on map
+        :return:
+        """
+        trajet_color = ["red", "blue", "green", "yellow", "purple"]
+        map = folium.Map(location=[45.7579341, 4.7650811], zoom_start=13)
+
+        for num_vheicule, list_coords in dict_coords.items():
+            for index, coords in enumerate(list_coords):
+                folium.Marker(coords,
+                              popup='<i>Latitude :</i>'+str(coords[0])+'<br>'+
+                              '<i>Longitude  :</i>'+str(coords[1]),
+                              tooltip='Véhicule N°'+str(num_vheicule))\
+                    .add_to(map)
+                
+            folium.PolyLine(list_coords, color=trajet_color[num_vheicule-1], weight=2.5, opacity=1).add_to(map)
+        map.save('./tmp/my_map_lyon.html')
+
+    def set_mode_heuristique(self, mode):
+        self.mode_heuristique = mode
