@@ -37,6 +37,7 @@
 2. Sur interface, dans le menu **File** cliquer sur **Load config file** en choisissant le fichier `.ini` pour initialiser les configurations de véhicule.
 3. En suite, cliquer sur **Load config file** en choissant le dossier de donnée pour qu'il charge les données dans le programme.
 4. L'heuristique calculé avec les chemins de véhicule devrait être affichées sur le map
+> Les chemins sont distinguées par les differentes couleurs et les points de livraison sont sous forme de marker sur map. Si on clique sur un marker, les coordonnées sont affichées dans un popup. 
 5. **[Différent calcul d'heuristique]**: changer le mode de calcule d'heuristique en cliquant sur le menu **Heuristique Mode** > [Mode], le programme va re-calculer l'heuristique par rapport au critère demandée et recharger le map sur interface.
     
     >le mode de calcul par défaut est une heuristique déterministe exhaustive 
@@ -44,3 +45,8 @@
 #### BUG potentiel:
 Si le programme crash il suffit de relancer, il s'agit d'un bug de `numpy` ou `gtk` sous windows, on a pas pu trouver la solution.
 >ref: Fatal Python error: PyEval_RestoreThread: NULL tstate
+
+#### Amélioration:
+1. afficher plus d'info sur le popup du marker, aussi la list de client(dans l'ordre) qu'on livre dans la zone text sur notre interface.
+2. optimiser le processus de traitement de donnée en entrée.
+3. bien structurer le resultat obtenu par le calcul d'heuristique.
