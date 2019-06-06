@@ -21,10 +21,13 @@
 - **exceptions**: un dossier qui contient les exceptions en cas d'erreur
 - **src**: dossier code source.
     - **modele**: les classes modèles.
+        - `BowserFrame.py`: la classe qui gère le web browser intégré dans notre interface
+        - `Heuristique.py`: Le coeur de notre heuristique
+        - `VehiculeConfiguration.py`: le data-modele de la configuration de véhicule
     - `GUI.py`: la classe GUI qui gère interface et interractions d'utilisateur.
-- **tmp**: dossier ou on met le fichier .html (le map) généré par la librairie [*folium*](https://python-visualization.github.io/folium/)
+- **tmp**: le dossier où on met le fichier .html (le map) généré par la librairie [*folium*](https://python-visualization.github.io/folium/)
 - **util**:
-    - `FileHandler.py`: la classe qui gère l'import et initialisation de fichier de config & fichier de donnée. 
+    - `FileHandler.py`: le controller qui gère l'import et initialisation de fichier de config & fichier de donnée. 
     - `FocusHandler.py`: le controller qui gère la frame de map sur notre interface.
     - `LoadHandler.py`: le controller qui initialise le fichier html dans notre interface.
 - `setup.py`: le ficher "main" pour lancer notre interface.
@@ -32,5 +35,12 @@
 ## Execution du programme
 1. Executer le fichier *setup.py*
 2. Sur interface, dans le menu **File** cliquer sur **Load config file** en choisissant le fichier `.ini` pour initialiser les configurations de véhicule.
-3. En suite, cliquer sur **Load config file** en choissant le dossier de donnée pour qu'il charge les donnée dans le programme.
-4. 
+3. En suite, cliquer sur **Load config file** en choissant le dossier de donnée pour qu'il charge les données dans le programme.
+4. L'heuristique calculé avec les chemins de véhicule devrait être affichées sur le map
+5. **[Différent calcul d'heuristique]**: changer le mode de calcule d'heuristique en cliquant sur le menu **Heuristique Mode** > [Mode], le programme va re-calculer l'heuristique par rapport au critère demandée et recharger le map sur interface.
+    
+    >le mode de calcul par défaut est une heuristique déterministe exhaustive 
+    
+#### BUG potentiel:
+Si le programme crash il suffit de relancer, il s'agit d'un bug de `numpy` ou `gtk` sous windows, on a pas pu trouver la solution.
+>ref: Fatal Python error: PyEval_RestoreThread: NULL tstate

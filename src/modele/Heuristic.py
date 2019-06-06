@@ -40,6 +40,7 @@ class Heuristic:
         self.best_score = 0
         self.best_route = []
         self.list_solution = []
+        self.best_result = []
 
         self.deliveryTime = 310
 
@@ -170,6 +171,7 @@ class Heuristic:
         result = False
 
         if self.best_score == 0:
+            self.best_result = self.trajets
             self.best_score = score
             for s in self.solutions:
                 self.best_route.append(s['indicesClients'])
