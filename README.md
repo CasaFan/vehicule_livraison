@@ -1,6 +1,8 @@
 # Projet Energy
 
-## Installation de librairies necessaire
+## Requirements
+1. [Python](https://www.python.org/downloads/) (3.7 ou 3.*)
+
 1. [Tkinter](https://docs.python.org/fr/3.7/library/tk.html): l'outil stantard python pour créer interface graphique.
     > Normalement tkinter est installé par défaut en python (3.7) Si ce n'est pas le cas: *apt-get install python-tk*.
 
@@ -46,7 +48,12 @@
 Si le programme crash il suffit de relancer, il s'agit d'un bug de `numpy` ou `gtk` sous windows, on a pas pu trouver la solution.
 >ref: Fatal Python error: PyEval_RestoreThread: NULL tstate
 
-#### Amélioration:
+### Amélioration:
 1. afficher plus d'info sur le popup du marker, aussi la list de client(dans l'ordre) qu'on livre dans la zone text sur notre interface.
 2. optimiser le processus de traitement de donnée en entrée.
 3. bien structurer le resultat obtenu par le calcul d'heuristique.
+
+## Licence
+MIT License
+
+Copyright (c) [2019] [casafan.yang@gmail.com] & [Lermite.vivian@gmail.com] & [Hadjarab.anis94@gmail.com]
