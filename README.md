@@ -37,7 +37,7 @@
 2. Sur interface, dans le menu **File** cliquer sur **Load config file** en choisissant le fichier `.ini` pour initialiser les configurations de véhicule.
 3. En suite, cliquer sur **Load config file** en choissant le dossier de donnée pour qu'il charge les données dans le programme.
 4. L'heuristique calculé avec les chemins de véhicule devrait être affichées sur le map
-> Les chemins sont distinguées par les differentes couleurs et les points de livraison sont sous forme de marker sur map. Si on clique sur un marker, les coordonnées sont affichées dans un popup. 
+    > Les chemins sont distinguées par les differentes couleurs et les points de livraison sont sous forme de marker sur map. Si on clique sur un marker, les coordonnées sont affichées dans un popup. 
 5. **[Différent calcul d'heuristique]**: changer le mode de calcule d'heuristique en cliquant sur le menu **Heuristique Mode** > [Mode], le programme va re-calculer l'heuristique par rapport au critère demandée et recharger le map sur interface.
     
     >le mode de calcul par défaut est une heuristique déterministe exhaustive 
