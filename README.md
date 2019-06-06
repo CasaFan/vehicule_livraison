@@ -36,6 +36,9 @@
 
 ## Execution du programme
 1. Executer le fichier *setup.py*
+    ```bash
+    py setup.py
+    ```
 2. Sur interface, dans le menu **File** cliquer sur **Load config file** en choisissant le fichier `.ini` pour initialiser les configurations de véhicule.
 3. En suite, cliquer sur **Load config file** en choissant le dossier de donnée pour qu'il charge les données dans le programme.
 4. L'heuristique calculé avec les chemins de véhicule devrait être affichées sur le map
