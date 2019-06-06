@@ -1,4 +1,4 @@
-#Projet Energy
+# Projet Energy
 
 ## Installation de librairies necessaire
 1. [Tkinter](https://docs.python.org/fr/3.7/library/tk.html): l'outil stantard python pour créer interface graphique.
@@ -16,7 +16,7 @@
     ````bash
     pip install numpy
     ````
-##Structure du projet
+## Structure du projet
 - **data**: un dossier qui contient les raw data
 - **exceptions**: un dossier qui contient les exceptions en cas d'erreur
 - **src**: dossier code source.
