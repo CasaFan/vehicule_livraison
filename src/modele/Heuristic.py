@@ -42,17 +42,28 @@ class Heuristic:
         self.list_solution = []
         self.best_result = []
 
-        self.deliveryTime = 310
-
     # Cette methode va nous permettre de recuperer l'index des elements dans l'ordre original
     # Ce qui va nous permettre de travailler sur le meme jeu de donnees sans avoir a le modifier
     # Lorsque nous allons travailler sur les voisinages
     def get_index_list(self, list, choice):
+        """
+        Cette methode va nous permettre de recuperer l'index des elements dans l'ordre original
+        Ce qui va nous permettre de travailler sur le meme jeu de donnees sans avoir a le modifier
+        Lorsque nous allons travailler sur les voisinages
+        :param list:
+        :param choice:
+        :return: result
+        """
         i = 0
         result = []
         for l in list:
             result.append(i)
             i = i + 1
+
+        """ 
+        On selectionne aleatoirement les element de notre liste pour avoir des resultats 
+        Non deterministes de notre heuristique
+        """
         if choice == 2 or choice == 4:
             random.shuffle(result)
         result.append(len(list))
@@ -60,15 +71,28 @@ class Heuristic:
         return result
 
     def get_index_list_for_solution(self, arrayList):
+        """
+        Le format des donnees des solutions est different de l'initial
+        et donc pour chaque voisinage, on utilise cette methode qui recupere nos id clients
+        et qui rajoute la longueur de la liste et -1 (le premier pour est pour qu'on parcours
+        bien tous nos clients et le second represente l'entrepot
+        :param arrayList:
+        :return: result:
+        """
         array = [len(arrayList), -1]
         result = arrayList + array
         return result
 
-    # Ce voisinage est le swap d'une valeur avec la valeur qui la suit
-    # Dans tous ces cas, on ne gere pas le cas ou la liste est vide.
-    # Dans notre facon de penser, on a suppose que si l'entreprise n'avait
-    # pas de client, qu'elle n'ait donc pas besoin de l'outil
     def premier_voisinage(self, range, list):
+        """
+        Question 1 : Ce voisinage est le swap d'une valeur avec la valeur qui la suit
+        Dans tous ces cas, on ne gere pas le cas ou la liste est vide.
+        Dans notre facon de penser, on a suppose que si l'entreprise n'avait
+        pas de client, qu'elle n'ait donc pas besoin de l'outil
+        :param range:
+        :param list:
+        :return: list:
+        """
         if range != -1:
             if range+1 < len(list) - 2:
                 a, b = list[range], list[range+1]
@@ -78,17 +102,34 @@ class Heuristic:
                 list[b], list[a] = list[a], list[b]
         return list
 
-    # Ce voisinage est l'inversion d'une valeur et de son opposee dans la liste
-    # ex: dans une liste de 10 elements, on inverse 1 et 10 ou bien 2 et 9, etc.
+    def delivery_time(self):
+        """
+        Calcule le temps que prend une livraison 5min + 10 secondes par collis
+        :return:
+        """
+        return (300 + 10 * float(self.demandes[self.lastDemande]))
+
     def deuxieme_voisinage(self, range, list):
+        """
+        Question 1: Ce voisinage est l'inversion d'une valeur et de son opposee dans la liste
+        ex: dans une liste de 10 elements, on inverse 1 et 10 ou bien 2 et 9, etc.
+        :param range:
+        :param list:
+        :return: list:
+        """
         if range != -1:
             if range < (len(list)-2)/2:
                 a, b = list[range], list[len(list)-3 - range]
                 list[b], list[a] = list[a], list[b]
         return list
-    
-    # Remplacer 30% elements consecutifs par par leur 30% opposes
+
     def troisieme_voisinage(self, my_range, my_list):
+        """
+        Question 1: Remplacer 30% elements consecutifs par leur 30% opposes
+        :param my_range:
+        :param my_list:
+        :return: my_list
+        """
         if my_range != -1:
             my_percent = round(len(my_list) * 30 / 100)
             if my_range < (round(len(my_list) / 2) - my_percent):
@@ -98,30 +139,55 @@ class Heuristic:
                         my_list[len(my_list) - 3 - (my_range + my_switch)], my_list[my_range + my_switch]
         return my_list
     
-    
     def check_if_demande_fits(self):
+        """
+        Verfier dans le reste de notre liste de clients, il exsite une demande que l'on peut ajouter
+        dans le vehicule si oui, c'est la valeur qu'on renvoie, sinon on renvoie faux
+        :return:
+        """
         for l in range(self.lastDemande, len(self.demandes)):
             if float(self.demandes[l]) + self.totalCapacity <= self.capacity:
                 return l
         return False
     
-    
     def respects_time_capacity_distance_constraints(self):
+        """
+        Verifie si l'on depasse pas la capacite no le temps ni la distance
+        On a decide de mettre des contraintes inviolables dans notre cas
+        :return: True or False
+        """
         return (((self.totalDist + float(self.mDistances[self.lastDemande][self.j]) + float(self.mDistances[len(self.demandes)][self.j])) <= self.max_dist)
                         and ((self.totalCapacity + float(self.demandes[self.lastDemande])) <= self.capacity)
-                        and ((self.totalTime + self.mTimes[self.lastDemande][self.j] + self.deliveryTime) <= self.endTime))
+                        and ((self.totalTime + self.mTimes[self.lastDemande][self.j] + self.delivery_time()) <= self.endTime))
     
     
     def respects_time_distance_constraints(self):
+        """
+        Meme que precedement mais cette fois selement pour le temps et la distance
+        :return:
+        """
         return (((self.totalDist + float(self.mDistances[self.adding_another_client][self.j]) + float(
             self.mDistances[len(self.demandes)][self.j])) <= self.max_dist)
-        and ((self.totalTime + self.mTimes[self.adding_another_client][self.j] + self.deliveryTime) <= self.endTime))
+        and ((self.totalTime + self.mTimes[self.adding_another_client][self.j] + self.delivery_time()) <= self.endTime))
     
     
     def after_vehicule_recharge_still_time_left(self):
+        """
+        On verifie si meme apres une recharge du vehicule, il nous reste tout de meme
+        du temps pour un dernier voyage
+        :return:
+        """
         return ((self.totalTime + (self.mTimes[len(self.demandes)][self.j]) * 2 + 3600) <= self.endTime)
 
     def initialize_heuristic_by_voisinage_order(self, i, choice):
+        """
+        Ici on initialise notre jeu de donne, tout d'abord en recuperant l'indice client
+        par la liste des demandes. Dans un deuxieme cas, la solution recuperee par notre
+        algo sera lancee modifee avec le voisinage 1 pour etre traitee. Puis 2 et 3..
+        :param i:
+        :param choice:
+        :return:
+        """
         if self.func_index == 1:
             return self.get_index_list(self.demandes, choice)
         if self.func_index == 2:
@@ -132,6 +198,12 @@ class Heuristic:
             return self.troisieme_voisinage(i, self.get_index_list_for_solution(self.list_solution))
 
     def export_file(self, file_name):
+        """
+        Exporter la solution dans un fichier tout en transformant les -1 que nous avons
+        dedans en R pour recharge. Nous supposons qu'a chaque retour au depot on recharge
+        :param file_name:
+        :return:
+        """
         with open(file_name, 'wb') as f:
             for b in self.best_route:
                 array = np.asarray(b)
@@ -142,6 +214,11 @@ class Heuristic:
                 np.savetxt(f, mat, fmt='%s', delimiter=', ')
 
     def get_last_solution_as_list(self, route):
+        """
+        Transformer la derniere solution obtenue en une liste manipulable d'id clients
+        :param route:
+        :return:
+        """
         result_list = []
         for sous_list in route:
             for item in sous_list:
@@ -156,6 +233,12 @@ class Heuristic:
         return result_list
 
     def export_solution_depending_on_algo_case(self, index):
+        """
+        Nous permet d'exporter pour chacune des iteration de notre algo
+        un fichier qui contiendra la meilleur solution pour chacun des voisinage
+        :param index:
+        :return:
+        """
         if index == 1:
             self.export_file('sol.txt')
         # On export la meilleur solution dans un fichier txt
@@ -167,6 +250,12 @@ class Heuristic:
             self.export_file('sol_voisinage3.txt')
     
     def best_score_solution(self):
+        """
+        Calcul du score et comparaison avec le meilleur score courant
+        Si meilleur, le remplace sinon garde l'ancien et enfin on export le resultat
+        dans un fichier text
+        :return:
+        """
         score = self.allTrucksDist + (self.allTrucksTime / 600) + (len(self.trajets) - 1) * 500
         result = False
 
@@ -189,13 +278,23 @@ class Heuristic:
         return result
 
     def add_travel_attributes(self):
+        """
+        A chaque fois qu'un vehicule est en decide de prendre une livraison en plus
+        On rajoute les differente valeurs a ses contraintes pour pouvoir analyser
+        s'il peut prendre plus
+        :return:
+        """
         self.sol.append(self.adding_another_client)
         self.totalDist += float(self.mDistances[self.lastDemande][self.adding_another_client])
         self.totalCapacity += float(self.demandes[self.lastDemande])
-        self.totalTime += self.mTimes[self.lastDemande][self.adding_another_client] + self.deliveryTime
-        self.allTrucksTime += self.mTimes[self.lastDemande][self.adding_another_client] + self.deliveryTime
+        self.totalTime += self.mTimes[self.lastDemande][self.adding_another_client] + self.delivery_time()
+        self.allTrucksTime += self.mTimes[self.lastDemande][self.adding_another_client] + self.delivery_time()
 
     def return_to_depot(self):
+        """
+        Idem que precedemment mais cette fois pour le retour au depot
+        :return:
+        """
         self.totalDist += float(self.mDistances[self.lastDemande][len(self.demandes)])
         self.totalTime += self.mTimes[self.lastDemande][len(self.demandes)]
         self.allTrucksTime += self.mTimes[self.lastDemande][len(self.demandes)]
@@ -257,8 +356,8 @@ class Heuristic:
 
                             self.totalDist += float(self.mDistances[self.lastDemande][self.j])
                             self.totalCapacity += float(self.demandes[self.lastDemande])
-                            self.totalTime += self.mTimes[self.lastDemande][self.j] + self.deliveryTime
-                            self.allTrucksTime += self.mTimes[self.lastDemande][self.j] + self.deliveryTime
+                            self.totalTime += self.mTimes[self.lastDemande][self.j] + self.delivery_time()
+                            self.allTrucksTime += self.mTimes[self.lastDemande][self.j] + self.delivery_time()
                             self.newVehicle = False
                             self.lastDemande = self.j
                             self.j = client_list_by_index[k]
